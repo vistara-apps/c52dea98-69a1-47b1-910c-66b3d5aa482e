@@ -1,0 +1,30 @@
+{
+  "accountAssociation": {
+    "header": "",
+    "payload": "",
+    "signature": ""
+  },
+  "frame": {
+    "version": "1",
+    "name": "ChickenEgg Arena",
+    "subtitle": "Built with Zara",
+    "description": "ChickenEgg Arena is a Base Mini App built with Zara.",
+    "iconUrl": "https://0co.to/images/zara-2.png",
+    "homeUrl": "https://c52dea9869a147b1910c66b3d5aa482e-q8kd.vercel.app",
+    "splashImageUrl": "https://c52dea9869a147b1910c66b3d5aa482e-q8kd.vercel.app/splash.png",
+    "splashBackgroundColor": "#000000",
+    "heroImageUrl": "https://c52dea9869a147b1910c66b3d5aa482e-q8kd.vercel.app/image.png",
+    "tagline": "ChickenEgg Arena",
+    "screenshotUrls": [
+      "https://c52dea9869a147b1910c66b3d5aa482e-q8kd.vercel.app/screenshot.png",
+      "https://c52dea9869a147b1910c66b3d5aa482e-q8kd.vercel.app/screenshot.png"
+    ],
+    "primaryCategory": "social",
+    "tags": [
+      "base",
+      "miniapp",
+      "onchainkit"
+    ],
+    "webhookUrl": "https://c52dea9869a147b1910c66b3d5aa482e-q8kd.vercel.app/api/webhook"
+  }
+}
