@@ -1,52 +1,26 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useDebate } from '@/hooks/useDebate';
 import { DebateCard } from './DebateCard';
 import { VotePanel } from './VotePanel';
 import { MessageList } from './MessageList';
 
-interface Message {
-  id: string;
-  agent: 'chicken' | 'egg';
-  text: string;
-  timestamp: number;
+interface DebateArenaProps {
+  debateId?: string;
+  question?: string;
 }
 
-export function DebateArena() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isLive, setIsLive] = useState(true);
+export function DebateArena({ debateId, question = "Which came first: the chicken or the egg?" }: DebateArenaProps) {
+  const { debate, isLoading, isLive, transcript, createDebate } = useDebate(debateId);
   const [timeRemaining, setTimeRemaining] = useState(180); // 3 minutes
 
-  // Simulate live debate messages
+  // Create debate if none exists
   useEffect(() => {
-    if (!isLive) return;
-
-    const sampleMessages = [
-      { agent: 'chicken' as const, text: "I came first! Evolution clearly shows that birds evolved before they laid eggs." },
-      { agent: 'egg' as const, text: "But the first chicken had to come FROM an egg! The egg came first, laid by a proto-chicken." },
-      { agent: 'chicken' as const, text: "That's circular reasoning! What laid that proto-chicken egg? Another chicken!" },
-      { agent: 'egg' as const, text: "No, it was a bird that wasn't quite a chicken yet. The egg contained the first true chicken DNA." },
-      { agent: 'chicken' as const, text: "DNA mutations happen in the organism, not the egg. The chicken came first!" },
-    ];
-
-    let messageIndex = 0;
-    const interval = setInterval(() => {
-      if (messageIndex < sampleMessages.length) {
-        const newMessage = {
-          ...sampleMessages[messageIndex],
-          id: `msg-${Date.now()}-${messageIndex}`,
-          timestamp: Date.now(),
-        };
-        setMessages(prev => [...prev, newMessage]);
-        messageIndex++;
-      } else {
-        clearInterval(interval);
-        setIsLive(false);
-      }
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [isLive]);
+    if (!debateId && !isLoading) {
+      createDebate(question);
+    }
+  }, [debateId, isLoading, createDebate, question]);
 
   // Countdown timer
   useEffect(() => {
@@ -65,21 +39,32 @@ export function DebateArena() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted">Loading debate...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const currentQuestion = debate?.question || question;
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2">
         <DebateCard
-          question="Which came first: the chicken or the egg?"
+          question={currentQuestion}
           isLive={isLive}
           timeRemaining={formatTime(timeRemaining)}
         />
-        <MessageList messages={messages} />
+        <MessageList messages={transcript} />
       </div>
       <div className="lg:col-span-1">
         <VotePanel
-          chickenVotes={1247}
-          eggVotes={1089}
-          totalVotes={2336}
+          debateId={debate?.id || 'default'}
           isLive={isLive}
         />
       </div>

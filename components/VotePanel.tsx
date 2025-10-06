@@ -1,27 +1,35 @@
 'use client';
 
 import { useState } from 'react';
+import { useVoting } from '@/hooks/useVoting';
 import { TokenBadge } from './TokenBadge';
 import { Share2, TrendingUp } from 'lucide-react';
 
 interface VotePanelProps {
-  chickenVotes: number;
-  eggVotes: number;
-  totalVotes: number;
+  debateId: string;
   isLive: boolean;
 }
 
-export function VotePanel({ chickenVotes, eggVotes, totalVotes, isLive }: VotePanelProps) {
-  const [voted, setVoted] = useState<'chicken' | 'egg' | null>(null);
+export function VotePanel({ debateId, isLive }: VotePanelProps) {
+  const {
+    voteCounts,
+    userVote,
+    hasVoted,
+    isLoading,
+    canVote,
+    castVote,
+    chickenPercentage,
+    eggPercentage
+  } = useVoting(debateId);
+
   const [showConfetti, setShowConfetti] = useState(false);
 
-  const chickenPercentage = Math.round((chickenVotes / totalVotes) * 100);
-  const eggPercentage = Math.round((eggVotes / totalVotes) * 100);
-
-  const handleVote = (choice: 'chicken' | 'egg') => {
-    setVoted(choice);
-    setShowConfetti(true);
-    setTimeout(() => setShowConfetti(false), 400);
+  const handleVote = async (choice: 'chicken' | 'egg') => {
+    const success = await castVote(choice);
+    if (success) {
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 400);
+    }
   };
 
   return (
@@ -31,41 +39,49 @@ export function VotePanel({ chickenVotes, eggVotes, totalVotes, isLive }: VotePa
       <div className="space-y-3 mb-6">
         <button
           onClick={() => handleVote('chicken')}
-          disabled={!isLive || voted !== null}
+          disabled={!isLive || hasVoted || !canVote || isLoading}
           className={`w-full btn-chicken relative overflow-hidden ${
-            voted === 'chicken' ? 'ring-2 ring-orange-400' : ''
-          } ${!isLive || voted !== null ? 'opacity-50 cursor-not-allowed' : ''}`}
+            userVote === 'chicken' ? 'ring-2 ring-orange-400' : ''
+          } ${!isLive || hasVoted || !canVote ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           <span className="relative z-10 flex items-center justify-center gap-2">
             🐔 Vote Chicken
-            {voted === 'chicken' && <span className="text-xs">✓</span>}
+            {isLoading ? '...' : userVote === 'chicken' && <span className="text-xs">✓</span>}
           </span>
-          {showConfetti && voted === 'chicken' && (
+          {showConfetti && userVote === 'chicken' && (
             <div className="absolute inset-0 confetti-burst bg-gradient-to-r from-orange-400 to-orange-600"></div>
           )}
         </button>
-        
+
         <button
           onClick={() => handleVote('egg')}
-          disabled={!isLive || voted !== null}
+          disabled={!isLive || hasVoted || !canVote || isLoading}
           className={`w-full btn-egg relative overflow-hidden ${
-            voted === 'egg' ? 'ring-2 ring-yellow-400' : ''
-          } ${!isLive || voted !== null ? 'opacity-50 cursor-not-allowed' : ''}`}
+            userVote === 'egg' ? 'ring-2 ring-yellow-400' : ''
+          } ${!isLive || hasVoted || !canVote ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           <span className="relative z-10 flex items-center justify-center gap-2">
             🥚 Vote Egg
-            {voted === 'egg' && <span className="text-xs">✓</span>}
+            {isLoading ? '...' : userVote === 'egg' && <span className="text-xs">✓</span>}
           </span>
-          {showConfetti && voted === 'egg' && (
+          {showConfetti && userVote === 'egg' && (
             <div className="absolute inset-0 confetti-burst bg-gradient-to-r from-yellow-400 to-yellow-600"></div>
           )}
         </button>
       </div>
 
-      {voted && (
+      {hasVoted && (
         <div className="mb-6 p-3 bg-success/20 border border-success/30 rounded-lg">
           <p className="text-success text-sm font-medium">
-            ✓ Vote recorded! You earned 2 tokens
+            ✓ Vote recorded! You earned 2 tokens for participating
+          </p>
+        </div>
+      )}
+
+      {!canVote && !hasVoted && (
+        <div className="mb-6 p-3 bg-orange-500/20 border border-orange-500/30 rounded-lg">
+          <p className="text-orange-400 text-sm font-medium">
+            💰 Not enough tokens! Get more tokens to vote.
           </p>
         </div>
       )}
@@ -89,7 +105,7 @@ export function VotePanel({ chickenVotes, eggVotes, totalVotes, isLive }: VotePa
               style={{ width: `${chickenPercentage}%` }}
             ></div>
           </div>
-          <p className="text-xs text-muted mt-1">{chickenVotes.toLocaleString()} votes</p>
+          <p className="text-xs text-muted mt-1">{voteCounts.chicken.toLocaleString()} votes</p>
         </div>
 
         <div>
@@ -103,7 +119,7 @@ export function VotePanel({ chickenVotes, eggVotes, totalVotes, isLive }: VotePa
               style={{ width: `${eggPercentage}%` }}
             ></div>
           </div>
-          <p className="text-xs text-muted mt-1">{eggVotes.toLocaleString()} votes</p>
+          <p className="text-xs text-muted mt-1">{voteCounts.egg.toLocaleString()} votes</p>
         </div>
       </div>
 
